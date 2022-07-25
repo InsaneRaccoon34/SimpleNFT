@@ -1,3 +1,4 @@
+from distutils.log import debug
 from email.mime import image
 from hashlib import new
 import os
@@ -19,10 +20,12 @@ def generateCharacter():
         randomNumber = randint(0, lenght - 1)
         seed.append(randomNumber)
 
+    for layer in layers:
+        randomNumber = seed[layers.index(layer)]
         img = Image.open(ASSETS_FOLDER + layer + "\\" + layer + str(randomNumber) + '.png')
         new_im.paste(img, (0,0), img.convert('RGBA'))
 
-    print(seed)
+    print('final seed', seed)
     return new_im
 
 
