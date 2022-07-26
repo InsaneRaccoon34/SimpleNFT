@@ -1,12 +1,25 @@
-from distutils.log import debug
-from email.mime import image
-from hashlib import new
-import os
+from importlib.metadata import metadata
+import os, json
 from random import randint, random
 from PIL import Image, ImageShow
 
 ASSETS_FOLDER = 'assets\\'
 NFT_FOLDER = "NFT_Collection"
+
+metadata = {
+    "name": "You NFT token name",
+    "description": "Something Cool here",
+    "image": "",
+    "attributes": []
+}
+
+def generate_meta_data(token_id):
+    metadata["name"] = str(token_id)
+    metadata["description"] = 'An Eternal Ethereum Digital Homie!'
+    metadata["image"] = ''
+    # Will add image and attributes after creation of image/meta
+    metadata["attributes"] = []
+    return metadata
 
 def generateCharacter():
 
@@ -33,4 +46,8 @@ generateCharacter()
 
 for x in range(42):
     pic = generateCharacter()
+
+    meta = json.dumps(generate_meta_data(x))
+    print(meta)
+    
     pic.save(NFT_FOLDER + "\\" + str(x) + '.png')
