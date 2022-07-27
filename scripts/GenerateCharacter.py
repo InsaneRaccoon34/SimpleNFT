@@ -21,17 +21,25 @@ def generate_meta_data(token_id):
     metadata["attributes"] = []
     return metadata
 
-def generateCharacter():
-
-    layers = os.listdir(ASSETS_FOLDER)
-    seed = []
-
-    new_im = Image.new('RGB', (250, 250), (255,255,255))
-
+def generateSeed(layers):
+    takenSeeds = []
+    seed =[]
     for layer in layers:
         lenght = len(os.listdir(ASSETS_FOLDER + layer))
         randomNumber = randint(0, lenght - 1)
         seed.append(randomNumber)
+
+    if (seed in takenSeeds):
+        print('seed ' + seed + 'was already taken #########################')
+        generateSeed()
+    else:
+        return seed
+
+def generateCharacter():
+    layers = os.listdir(ASSETS_FOLDER)
+    seed = generateSeed(layers)
+
+    new_im = Image.new('RGB', (250, 250), (255,255,255))
 
     for layer in layers:
         randomNumber = seed[layers.index(layer)]
@@ -40,9 +48,6 @@ def generateCharacter():
 
     print('final seed', seed)
     return new_im
-
-
-generateCharacter()
 
 for x in range(42):
     pic = generateCharacter()
