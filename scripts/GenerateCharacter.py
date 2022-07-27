@@ -21,8 +21,9 @@ def generate_meta_data(token_id):
     metadata["attributes"] = []
     return metadata
 
+takenSeeds = []
+
 def generateSeed(layers):
-    takenSeeds = []
     seed =[]
     for layer in layers:
         lenght = len(os.listdir(ASSETS_FOLDER + layer))
@@ -33,6 +34,7 @@ def generateSeed(layers):
         print('seed ' + seed + 'was already taken #########################')
         generateSeed()
     else:
+        takenSeeds.append(seed)
         return seed
 
 def generateCharacter():
