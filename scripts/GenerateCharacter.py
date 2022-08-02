@@ -1,10 +1,24 @@
+from email import header
+from email.mime import image
 from importlib.metadata import metadata
-import os, json
+import os, json, io
 from random import randint, random
 from PIL import Image, ImageShow
+import requests
+
+PINATA_BASE_URL = 'https://api.pinata.cloud/'
+PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiM2JkY2FiNS0yZWI0LTQ2NWEtYjRiMy1jNWQ4ZmZkMGQyNmYiLCJlbWFpbCI6Im1vcm96dWs0NEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6IkZSQTEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX0seyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYzc2Njg4ZmVhZDM3YzAyYjgzNmQiLCJzY29wZWRLZXlTZWNyZXQiOiIzNzI0YzZkM2EyNDQ3ZjYyZDgxNTcxZTNkNmExYWVlY2ZjODIyNWNkMzFjNTc5ZWQ4MzgzZmQ5MDU0YjBhYjMxIiwiaWF0IjoxNjU5MDg0MDM1fQ.pNwj2vBxYoGTjbxsDuF134090PNWjSb-xaxyAQIcNkI"
+HEADERS = { 'Authorization': 'Bearer ' + PINATA_JWT}
 
 ASSETS_FOLDER = 'assets\\'
 NFT_FOLDER = "NFT_Collection"
+
+
+def testPinataConnection():
+    url = "https://api.pinata.cloud/data/testAuthentication"
+    payload={} 
+    response = requests.request("GET", url, headers=HEADERS, data=payload)
+    print(response.text)
 
 metadata = {
     "name": "You NFT token name",
@@ -31,13 +45,13 @@ def generateSeed(layers):
         seed.append(randomNumber)
 
     if (seed in takenSeeds):
-        print('seed ' + seed + 'was already taken #########################')
+        print('seed ' + seed + ' was already taken')
         generateSeed()
     else:
         takenSeeds.append(seed)
         return seed
 
-def generateCharacter():
+def generatePicture():
     layers = os.listdir(ASSETS_FOLDER)
     seed = generateSeed(layers)
 
@@ -51,10 +65,37 @@ def generateCharacter():
     print('final seed', seed)
     return new_im
 
-for x in range(42):
-    pic = generateCharacter()
+def generateCharacter():
+    for x in range(42):
+        pic = generatePicture()
+        picturePath = NFT_FOLDER + "\\" + str(x) + '.png'
+        pic.save(picturePath)
 
-    meta = json.dumps(generate_meta_data(x))
-    print(meta)
+        with open(picturePath, "rb") as image:
+            f = image.read()
+            b = bytearray(f)
+
+        endpoint = 'pinning/pinFileToIPFS'
+        payload={
+            'pinataOptions': '{"cidVersion": 1}',
+            'pinataMetadata': '{"name": "Name.png", "keyvalues": {"company": "Pinata"}}'
+            }
+        response = requests.request(
+            "POST",
+            url = PINATA_BASE_URL + endpoint,
+            data = payload,
+            files = { "file": b },
+            headers = HEADERS
+        )
+        
+        im = Image.open('test.jpg')
+        im_resize = im.resize((500, 500))
+        buf = io.BytesIO()
+        im_resize.save(buf, format='JPEG')
+
+        meta = json.dumps(generate_meta_data(x))
+        print(meta)
     
-    pic.save(NFT_FOLDER + "\\" + str(x) + '.png')
+
+
+generateCharacter()
