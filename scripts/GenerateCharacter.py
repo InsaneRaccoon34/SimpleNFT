@@ -9,6 +9,7 @@ import requests
 PINATA_BASE_URL = 'https://api.pinata.cloud/'
 PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiM2JkY2FiNS0yZWI0LTQ2NWEtYjRiMy1jNWQ4ZmZkMGQyNmYiLCJlbWFpbCI6Im1vcm96dWs0NEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6IkZSQTEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX0seyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiYzc2Njg4ZmVhZDM3YzAyYjgzNmQiLCJzY29wZWRLZXlTZWNyZXQiOiIzNzI0YzZkM2EyNDQ3ZjYyZDgxNTcxZTNkNmExYWVlY2ZjODIyNWNkMzFjNTc5ZWQ4MzgzZmQ5MDU0YjBhYjMxIiwiaWF0IjoxNjU5MDg0MDM1fQ.pNwj2vBxYoGTjbxsDuF134090PNWjSb-xaxyAQIcNkI"
 HEADERS = { 'Authorization': 'Bearer ' + PINATA_JWT}
+GATEWAY_URL = 'https://gateway.pinata.cloud/ipfs/'
 
 ASSETS_FOLDER = 'assets\\'
 NFT_FOLDER = "NFT_Collection"
@@ -27,10 +28,10 @@ metadata = {
     "attributes": []
 }
 
-def generate_meta_data(token_id):
-    metadata["name"] = str(token_id)
+def generate_meta_data(tokenId, responseText):
+    metadata["name"] = str(tokenId)
     metadata["description"] = 'An Eternal Ethereum Digital Homie!'
-    metadata["image"] = ''
+    metadata["image"] = GATEWAY_URL + responseText['IpfsHash']
     # Will add image and attributes after creation of image/meta
     metadata["attributes"] = []
     return metadata
@@ -66,34 +67,34 @@ def generatePicture():
     return new_im
 
 def generateCharacter():
-    for x in range(42):
+    for imageIteration in range(42):
         pic = generatePicture()
-        picturePath = NFT_FOLDER + "\\" + str(x) + '.png'
+        picturePath = NFT_FOLDER + "\\" + str(imageIteration) + '.png'
         pic.save(picturePath)
 
         with open(picturePath, "rb") as image:
             f = image.read()
-            b = bytearray(f)
+            byteImage = bytearray(f)
 
         endpoint = 'pinning/pinFileToIPFS'
         payload={
             'pinataOptions': '{"cidVersion": 1}',
-            'pinataMetadata': '{"name": "Name.png", "keyvalues": {"company": "Pinata"}}'
+            'pinataMetadata': ''
             }
+        payload['pinataMetadata'] = json.dumps({
+            'name': str(imageIteration) + '.png',
+            "keyvalues": {"company": "Pinata"}
+        })
+
         response = requests.request(
             "POST",
             url = PINATA_BASE_URL + endpoint,
             data = payload,
-            files = { "file": b },
+            files = { "file": byteImage },
             headers = HEADERS
         )
-        
-        im = Image.open('test.jpg')
-        im_resize = im.resize((500, 500))
-        buf = io.BytesIO()
-        im_resize.save(buf, format='JPEG')
 
-        meta = json.dumps(generate_meta_data(x))
+        meta = json.dumps(generate_meta_data(imageIteration, json.loads(response.text)))
         print(meta)
     
 
